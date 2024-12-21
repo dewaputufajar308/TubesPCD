@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aplikasi Klasifikasi Kematangan Pisang</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background-color: #f9f9f9;
+            color: #333;
+        }
+        header {
+            background-color: #4CAF50;
+            color: white;
+            padding: 1rem 0;
+            text-align: center;
+        }
+        .container {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 1rem;
+            background: white;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h2 {
+            color: #4CAF50;
+        }
+        .upload-section {
+            text-align: center;
+            margin: 2rem 0;
+        }
+        .result {
+            text-align: center;
+            margin-top: 1rem;
+        }
+        .button {
+            display: inline-block;
+            padding: 10px 20px;
+            font-size: 16px;
+            color: white;
+            background-color: #4CAF50;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .button:hover {
+            background-color: #45a049;
+        }
+    </style>
+    <script>
+        async function classifyImage() {
+            const fileInput = document.getElementById('imageInput');
+            const file = fileInput.files[0];
+
+            if (!file) {
+                alert('Silakan unggah gambar terlebih dahulu.');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const response = await fetch('http://127.0.0.1:8000/classify', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        // Ensure the request is sent with the right headers if necessary
+                        "Content-Type": "multipart/form-data"
+                    }
+                });
+
+                // Handle response
+                const result = await response.json();
+
+                if (response.ok) {
+                    document.getElementById('result').innerText = `Hasil Klasifikasi: ${result.label}`;
+                } else {
+                    document.getElementById('result').innerText = `Terjadi kesalahan: ${result.error}`;
+                }
+            } catch (error) {
+                document.getElementById('result').innerText = `Kesalahan: ${error.message}`;
+            }
+        }
+    </script>
+</head>
+<body>
+    <header>
+        <h1>Klasifikasi Kematangan Pisang</h1>
+    </header>
+    <div class="container">
+        <h2>Unggah Gambar Pisang</h2>
+        <div class="upload-section">
+            <input type="file" id="imageInput" accept="image/*">
+            <button class="button" onclick="classifyImage()">Klasifikasikan</button>
+        </div>
+        <div class="result" id="result">
+            <!-- Hasil klasifikasi akan ditampilkan di sini -->
+        </div>
+    </div>
+</body>
+</html>
