@@ -68,11 +68,7 @@
             try {
                 const response = await fetch('http://127.0.0.1:8000/classify', {
                     method: 'POST',
-                    body: formData,
-                    headers: {
-                        // Ensure the request is sent with the right headers if necessary
-                        "Content-Type": "multipart/form-data"
-                    }
+                    body: formData,                
                 });
 
                 // Handle response
