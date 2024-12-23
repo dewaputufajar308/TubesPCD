@@ -140,3 +140,57 @@ def classify():
 
 if __name__ == '__main__':
     app.run(host='127.0.0.1', port=8000, debug=True)
+
+# Define function to extract SIFT features
+def extract_sift_features(image, image_size=(224, 224), fixed_length=128):
+    img_resized = cv2.resize(image, image_size)
+    sift = cv2.SIFT_create()
+    keypoints, descriptors = sift.detectAndCompute(img_resized, None)
+
+    # If no descriptors found, return an empty array
+    if descriptors is None:
+        descriptors = np.zeros((1, fixed_length))
+
+    # Ensure descriptors have the same length
+    if descriptors.shape[0] > 1:
+        descriptors = np.mean(descriptors, axis=0).reshape(1, -1)
+
+    # If descriptors are too short, pad with zeros
+    if descriptors.shape[1] < fixed_length:
+        descriptors = np.pad(descriptors, ((0, 0), (0, fixed_length - descriptors.shape[1])), mode='constant')
+
+    return descriptors.flatten()  # Flatten to 1D array
+# Load dataset function (loading images from a directory)
+def load_images(image_dir, use_hog=True):
+    data = []
+    labels = []
+
+    for label in os.listdir(image_dir):
+        class_dir = os.path.join(image_dir, label)
+        if os.path.isdir(class_dir):
+            for image_path in glob.glob(os.path.join(class_dir, "*.jpg")):
+                img = cv2.imread(image_path)
+
+                # Apply either SIFT based on the parameter
+                                   features = extract_sift_features(img)
+
+                data.append(features)
+                labels.append(label)
+
+    return np.array(data), np.array(labels)
+
+
+# Load and evaluate using SIFT features
+print("\nEvaluating SIFT Features:")
+
+# Load SIFT features for train, validation, and test sets
+X_train_sift, y_train_sift = load_images(train_dir, use_hog=False)
+X_valid_sift, y_valid_sift = load_images(valid_dir, use_hog=False)
+X_test_sift, y_test_sift = load_images(test_dir, use_hog=False)
+
+# Combine train and validation data for final training
+X_train_combined_sift = np.concatenate((X_train_sift, X_valid_sift), axis=0)
+y_train_combined_sift = np.concatenate((y_train_sift, y_valid_sift), axis=0)
+
+# Classify and evaluate SIFT features
+classify_and_evaluate(X_train_combined_sift, X_test_sift, y_train_combined_sift, y_test_sift)
